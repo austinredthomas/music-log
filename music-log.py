@@ -15,14 +15,23 @@ def requestToken(clientID, clientSecret):
     response = requests.post(url, data=data, headers=headers)
     jsonResponse = response.json()
     token = jsonResponse["access_token"]
-    return(token)
+    return token
 
 def searchArtist(token):
-    # print 
     url = "https://api.spotify.com/v1/search"
-    q = input("Enter artist name: ")
-    
-    # type = #artist
+    # Create header (Authorization, Content-Type)
+    headers = {
+        'Authorization': 'Bearer  ' + token,
+    }
+    params = {
+        'q': 'muse',
+        'type': 'artist'
+    }
+    response = requests.get(url, headers=headers, params=params)
+    jsonResponse = response.json()
+    print(jsonResponse['artists']['items'])
+    for jsonResponse['artists']['items']:
+
 
 def getAlbum():
     print("Getting album...")

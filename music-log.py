@@ -1,5 +1,6 @@
 import requests
 import datetime
+import sys
 
 # Get valid access token from Spotify API
 def requestToken(clientID, clientSecret):
@@ -57,7 +58,6 @@ def searchArtist(token):
 def getAlbum(artistID, token):
     print("Getting ArtistID: ", artistID, " albums...") 
     url = 'https://api.spotify.com/v1/artists/' + artistID + '/albums'
-    print(url)
     headers = {
         'Authorization': 'Bearer  ' + token
     }
@@ -66,21 +66,32 @@ def getAlbum(artistID, token):
     }
     response = requests.get(url, headers = headers, params = params)
     jsonResponse = response.json()
-    print("Response: ", jsonResponse['items'][0])
     for i in jsonResponse['items']:
         print("Album name: ", i['name'], "| Tracks: ", i['total_tracks'])
 
 if __name__ == '__main__':
-    # get Client ID
+    def openMenu():
+    # Open menu
+        print("\nSelect option from menu:\n(1) Search for Artist's albums\n(2) Get tracklist of current listened to album\n(0) Exit")
+        answer=int(input())
+        if answer == 0:
+            sys.exit()
+        elif answer == 1:
+            checkToken(tokenExpireTime)
+            artistID = searchArtist(token)
+            print("The artist you chose ID: ", artistID)
+            getAlbum(artistID, token)
+        elif answer == 2:
+            print("we're about to get some info...")
+        openMenu()
+
+    # get Client ID and Client Secret
     f = open("clientID.txt", "r")
     lines = f.readlines()
     clientID = lines[0]
-
-    # get Client Secret
     f = open("clientSecret.txt", "r")
     lines = f.readlines()
     clientSecret = lines[0]
-
     # get token and store, track expiration time
     token, tokenExpireTime = requestToken(clientID, clientSecret)
     print(tokenExpireTime)
@@ -89,8 +100,5 @@ if __name__ == '__main__':
     else:
         print("Token is valid.")
     print("Token: ", token)
-    
-    artistID = searchArtist(token)
-    print("The artist you chose ID: ", artistID)
-    
-    getAlbum(artistID, token)
+
+    openMenu()

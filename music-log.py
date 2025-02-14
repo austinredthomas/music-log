@@ -1,4 +1,5 @@
 import requests
+import datetime
 
 # Get valid access token from Spotify API
 def requestToken(clientID, clientSecret):
@@ -14,12 +15,24 @@ def requestToken(clientID, clientSecret):
     response = requests.post(url, data=data, headers=headers)
     jsonResponse = response.json()
     token = jsonResponse["access_token"]
-    return token
+    tokenExpireTime = datetime.datetime.now() + datetime.timedelta(seconds = jsonResponse['expires_in'])
+    return token, tokenExpireTime
+
+def checkToken(tokenExpireTime):
+    # Function for checking whether the current token is expired
+    # Returns TRUE if valid, and FALSE if expired
+    currentTime = datetime.datetime.now()
+    if currentTime > tokenExpireTime:
+        return False
+    else:
+        return True
 
 def searchArtist(token):
+    # get input from user
     q = input("Enter artist name: ")
+    
+    # set url, headers, and params for GET request
     url = "https://api.spotify.com/v1/search"
-    # Create header (Authorization, Content-Type)
     headers = {
         'Authorization': 'Bearer  ' + token,
     }
@@ -27,9 +40,13 @@ def searchArtist(token):
         'q': q,
         'type': 'artist'
     }
+    
+    # Make GET request and turn response into JSON
     response = requests.get(url, headers=headers, params=params)
     jsonResponse = response.json()
     print(jsonResponse['artists']['items'][0]['name'])
+    
+    # Iterate through artists and ask for confirmation
     for i in jsonResponse['artists']['items']:
         artistName = i['name']
         print("Is this your artist?: ", artistName)
@@ -47,11 +64,12 @@ def getAlbum(artistID, token):
     params = {
         'include_groups': 'album'
     }
-    response = requests.get(url, headers = headers, params = params) # url, headers, params
+    response = requests.get(url, headers = headers, params = params)
     jsonResponse = response.json()
     print("Response: ", jsonResponse['items'][0])
     for i in jsonResponse['items']:
         print("Album name: ", i['name'], "| Tracks: ", i['total_tracks'])
+
 if __name__ == '__main__':
     # get Client ID
     f = open("clientID.txt", "r")
@@ -63,9 +81,13 @@ if __name__ == '__main__':
     lines = f.readlines()
     clientSecret = lines[0]
 
-    # get token and store (only valid for 1 hour)
-    token = requestToken(clientID, clientSecret)
-    
+    # get token and store, track expiration time
+    token, tokenExpireTime = requestToken(clientID, clientSecret)
+    print(tokenExpireTime)
+    if checkToken(tokenExpireTime) == False:
+        print("Token is expired.")
+    else:
+        print("Token is valid.")
     print("Token: ", token)
     
     artistID = searchArtist(token)
